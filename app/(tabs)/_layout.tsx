@@ -1,14 +1,31 @@
 /**
  * Tab navigator — Dribbble-style: dark pill bar, Scan centered (2 | Scan | 2), 5 tabs.
+ * Tab press: always navigates to main screen for that tab (pop to top for nested stacks).
  */
 
 import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
-import { Tabs } from 'expo-router';
+import { View, StyleSheet, Platform, Pressable } from 'react-native';
+import { Tabs, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Fonts, FontSizes } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
+import { Fonts } from '../../constants/theme';
 
-const TAB_BAR_DARK = '#1C1917';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function TabBarButtonWithReplace(props: any & { href: string }) {
+  const { href, children, onPress, ...rest } = props;
+  return (
+    <Pressable
+      {...rest}
+      onPress={(e: unknown) => {
+        router.replace(href as '/');
+        if (typeof onPress === 'function') onPress(e);
+      }}
+    >
+      {children}
+    </Pressable>
+  );
+}
+
 const TAB_BAR_RADIUS = 28;
 const SCAN_PILL_SIZE = 48;
 const SCAN_ICON_SIZE = 24;
@@ -16,14 +33,18 @@ const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 86 : 70;
 const BOTTOM_PAD = Platform.OS === 'ios' ? 26 : 10;
 
 export default function TabsLayout() {
+  const { colors, isDark } = useTheme();
+  const tabBarBg = isDark ? colors.card : '#1C1917';
+  const tabBarActiveTint = isDark ? colors.primary : '#FFFFFF';
+  const tabBarInactiveTint = isDark ? colors.textMuted : 'rgba(255,255,255,0.5)';
   return (
     <Tabs
       screenOptions={{
-        headerStyle: { backgroundColor: Colors.background },
-        headerTintColor: Colors.textPrimary,
+        headerStyle: { backgroundColor: colors.background },
+        headerTintColor: colors.textPrimary,
         headerTitleStyle: { fontFamily: Fonts.medium },
-        tabBarActiveTintColor: Colors.white,
-        tabBarInactiveTintColor: 'rgba(255,255,255,0.5)',
+        tabBarActiveTintColor: tabBarActiveTint,
+        tabBarInactiveTintColor: tabBarInactiveTint,
         tabBarLabelStyle: {
           fontFamily: Fonts.medium,
           fontSize: 10,
@@ -36,7 +57,7 @@ export default function TabsLayout() {
           height: TAB_BAR_HEIGHT,
           paddingTop: 8,
           paddingBottom: BOTTOM_PAD,
-          backgroundColor: TAB_BAR_DARK,
+          backgroundColor: tabBarBg,
           borderTopWidth: 0,
           borderTopLeftRadius: TAB_BAR_RADIUS,
           borderTopRightRadius: TAB_BAR_RADIUS,
@@ -61,6 +82,9 @@ export default function TabsLayout() {
             />
           ),
           headerTitle: 'Dashboard',
+          tabBarButton: (props) => (
+            <TabBarButtonWithReplace {...props} href="/(tabs)" />
+          ),
         }}
       />
       <Tabs.Screen
@@ -74,7 +98,10 @@ export default function TabsLayout() {
               color={color}
             />
           ),
-          headerShown: false,
+          headerShown: true,
+          tabBarButton: (props) => (
+            <TabBarButtonWithReplace {...props} href="/(tabs)/products" />
+          ),
         }}
       />
       <Tabs.Screen
@@ -86,11 +113,14 @@ export default function TabsLayout() {
               <Ionicons
                 name="barcode"
                 size={SCAN_ICON_SIZE}
-                color={Colors.white}
+                color="#FFFFFF"
               />
             </View>
           ),
           headerShown: false,
+          tabBarButton: (props) => (
+            <TabBarButtonWithReplace {...props} href="/(tabs)/scan" />
+          ),
         }}
       />
       <Tabs.Screen
@@ -106,6 +136,9 @@ export default function TabsLayout() {
           ),
           headerShown: true,
           headerTitle: 'Alerts',
+          tabBarButton: (props) => (
+            <TabBarButtonWithReplace {...props} href="/(tabs)/alerts" />
+          ),
         }}
       />
       <Tabs.Screen
@@ -120,6 +153,9 @@ export default function TabsLayout() {
             />
           ),
           headerShown: false,
+          tabBarButton: (props) => (
+            <TabBarButtonWithReplace {...props} href="/(tabs)/settings" />
+          ),
         }}
       />
     </Tabs>
@@ -131,17 +167,17 @@ const styles = StyleSheet.create({
     width: SCAN_PILL_SIZE,
     height: SCAN_PILL_SIZE,
     borderRadius: SCAN_PILL_SIZE / 2,
-    backgroundColor: Colors.primary,
+    backgroundColor: '#10B981',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: -14,
-    shadowColor: Colors.primary,
+    shadowColor: '#10B981',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
     elevation: 8,
   },
   scanPillActive: {
-    backgroundColor: Colors.primaryDark,
+    backgroundColor: '#059669',
   },
 });

@@ -2,22 +2,76 @@
  * Notifications — daily expiry alerts, alert threshold, weekly report, test notification.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, ScrollView, Switch, TouchableOpacity, StyleSheet } from 'react-native';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useTheme } from '../../../contexts/ThemeContext';
 import { useSettings } from '../../../lib/hooks/useSettings';
 import { updateSettings } from '../../../lib/services/settings';
 import { sendTestNotification, cancelDailyAndWeeklyNotifications } from '../../../lib/services/notifications';
 import { useToast } from '../../../components/ui/Toast';
 import { Button } from '../../../components/ui/Button';
-import { Colors, Fonts, FontSizes, Spacing } from '../../../constants/theme';
+import { Fonts, FontSizes, Spacing } from '../../../constants/theme';
 
 const THRESHOLD_OPTIONS = [3, 7, 14, 30];
 
 export default function NotificationsScreen() {
+  const { colors } = useTheme();
   const { user } = useAuth();
   const { data: settings, loading, refetch } = useSettings(user?.id);
   const { success, error: showError } = useToast();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: colors.background },
+        content: { padding: Spacing.lg, paddingBottom: Spacing['4xl'] },
+        section: {
+          marginBottom: Spacing.xl,
+          backgroundColor: colors.card,
+          borderRadius: 8,
+          borderWidth: 1,
+          borderColor: colors.border,
+          padding: Spacing.lg,
+        },
+        sectionTitle: {
+          fontFamily: Fonts.medium,
+          fontSize: FontSizes.sm,
+          color: colors.textSecondary,
+          marginBottom: Spacing.md,
+        },
+        row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+        label: {
+          fontFamily: Fonts.regular,
+          fontSize: FontSizes.md,
+          color: colors.textPrimary,
+          flex: 1,
+        },
+        chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
+        chip: {
+          paddingHorizontal: Spacing.lg,
+          paddingVertical: Spacing.md,
+          borderRadius: 9999,
+          backgroundColor: colors.borderLight,
+        },
+        chipActive: { backgroundColor: colors.primary },
+        chipText: {
+          fontFamily: Fonts.medium,
+          fontSize: FontSizes.sm,
+          color: colors.textSecondary,
+        },
+        chipTextActive: { color: colors.white },
+        saveBtn: { marginTop: Spacing.lg },
+        hint: {
+          fontFamily: Fonts.regular,
+          fontSize: FontSizes.sm,
+          color: colors.textSecondary,
+          marginBottom: Spacing.md,
+          lineHeight: 20,
+        },
+        testBtn: { marginTop: Spacing.xs },
+      }),
+    [colors]
+  );
 
   const [dailyAlerts, setDailyAlerts] = useState(true);
   const [alertThreshold, setAlertThreshold] = useState(7);
@@ -79,8 +133,8 @@ export default function NotificationsScreen() {
           <Switch
             value={dailyAlerts}
             onValueChange={setDailyAlerts}
-            trackColor={{ false: Colors.border, true: Colors.primaryLight }}
-            thumbColor={dailyAlerts ? Colors.primary : Colors.textMuted}
+            trackColor={{ false: colors.border, true: colors.primaryLight }}
+            thumbColor={dailyAlerts ? colors.primary : colors.textMuted}
           />
         </View>
       </View>
@@ -109,8 +163,8 @@ export default function NotificationsScreen() {
           <Switch
             value={weeklyReport}
             onValueChange={setWeeklyReport}
-            trackColor={{ false: Colors.border, true: Colors.primaryLight }}
-            thumbColor={weeklyReport ? Colors.primary : Colors.textMuted}
+            trackColor={{ false: colors.border, true: colors.primaryLight }}
+            thumbColor={weeklyReport ? colors.primary : colors.textMuted}
           />
         </View>
       </View>
@@ -134,73 +188,3 @@ export default function NotificationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  content: {
-    padding: Spacing.lg,
-    paddingBottom: Spacing['4xl'],
-  },
-  section: {
-    marginBottom: Spacing.xl,
-    backgroundColor: Colors.card,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: Spacing.lg,
-  },
-  sectionTitle: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes.sm,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.md,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  label: {
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.md,
-    color: Colors.textPrimary,
-    flex: 1,
-  },
-  chips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-  },
-  chip: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderRadius: 9999,
-    backgroundColor: Colors.borderLight,
-  },
-  chipActive: {
-    backgroundColor: Colors.primary,
-  },
-  chipText: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes.sm,
-    color: Colors.textSecondary,
-  },
-  chipTextActive: {
-    color: Colors.white,
-  },
-  saveBtn: {
-    marginTop: Spacing.lg,
-  },
-  hint: {
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.sm,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.md,
-    lineHeight: 20,
-  },
-  testBtn: {
-    marginTop: Spacing.xs,
-  },
-});

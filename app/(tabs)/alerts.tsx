@@ -14,7 +14,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useProducts } from '../../lib/hooks/useProducts';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Fonts, FontSizes, Spacing, Shadows } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
+import { Fonts, FontSizes, Spacing, Shadows } from '../../constants/theme';
 import { daysUntil } from '../../constants/status';
 import { Card } from '../../components/ui/Card';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -42,9 +43,57 @@ function formatExpiryLabel(expiryDate: string): { text: string; urgent: boolean 
 }
 
 export default function AlertsScreen() {
+  const { colors } = useTheme();
   const { user } = useAuth();
   const { data: products, loading, refetch } = useProducts(user?.id);
   const [handledIds, setHandledIds] = useState<Set<string>>(new Set());
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: colors.background },
+        scrollContent: { padding: Spacing.lg, paddingBottom: Spacing['4xl'] },
+        section: { marginBottom: Spacing.xl },
+        sectionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.md },
+        sectionHeaderUrgent: {},
+        sectionHeaderExpired: {},
+        sectionTitle: {
+          fontFamily: Fonts.bold,
+          fontSize: FontSizes.lg,
+          color: colors.textPrimary,
+        },
+        sectionTitleUrgent: { color: colors.destructive },
+        sectionTitleExpired: { color: colors.destructive },
+        alertCard: { padding: Spacing.lg, marginBottom: Spacing.sm, ...Shadows.sm },
+        alertRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+        alertMain: { flex: 1, marginRight: Spacing.md },
+        alertName: {
+          fontFamily: Fonts.medium,
+          fontSize: FontSizes.md,
+          color: colors.textPrimary,
+        },
+        alertMeta: {
+          fontFamily: Fonts.regular,
+          fontSize: FontSizes.sm,
+          color: colors.textSecondary,
+          marginTop: Spacing.xs,
+        },
+        alertRight: { alignItems: 'flex-end' },
+        alertDays: {
+          fontFamily: Fonts.medium,
+          fontSize: FontSizes.sm,
+          color: colors.warning,
+        },
+        alertDaysUrgent: { color: colors.destructive },
+        settingsLink: { marginTop: Spacing.xl, alignItems: 'center' },
+        settingsLinkText: {
+          fontFamily: Fonts.regular,
+          fontSize: FontSizes.sm,
+          color: colors.textMuted,
+        },
+        bottomPad: { height: Spacing['2xl'] },
+      }),
+    [colors]
+  );
 
   const { today, soon, expired } = useMemo(() => {
     const today: ProductWithBatches[] = [];
@@ -163,7 +212,7 @@ export default function AlertsScreen() {
       {visibleToday.length > 0 && (
         <View style={styles.section}>
           <View style={[styles.sectionHeader, styles.sectionHeaderUrgent]}>
-            <Ionicons name="alert-circle" size={18} color={Colors.destructive} />
+            <Ionicons name="alert-circle" size={18} color={colors.destructive} />
             <Text style={[styles.sectionTitle, styles.sectionTitleUrgent]}>
               {' '}Expiring today
             </Text>
@@ -175,7 +224,7 @@ export default function AlertsScreen() {
       {visibleSoon.length > 0 && (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="warning" size={18} color={Colors.warning} />
+            <Ionicons name="warning" size={18} color={colors.warning} />
             <Text style={styles.sectionTitle}> Expiring soon (1–7 days)</Text>
           </View>
           {visibleSoon.map((p, i) =>
@@ -187,7 +236,7 @@ export default function AlertsScreen() {
       {visibleExpired.length > 0 && (
         <View style={styles.section}>
           <View style={[styles.sectionHeader, styles.sectionHeaderExpired]}>
-            <Ionicons name="close-circle" size={18} color={Colors.destructive} />
+            <Ionicons name="close-circle" size={18} color={colors.destructive} />
             <Text style={[styles.sectionTitle, styles.sectionTitleExpired]}>
               {' '}Expired
             </Text>
@@ -215,82 +264,3 @@ export default function AlertsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  scrollContent: {
-    padding: Spacing.lg,
-    paddingBottom: Spacing['4xl'],
-  },
-  section: {
-    marginBottom: Spacing.xl,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.md,
-  },
-  sectionHeaderUrgent: {},
-  sectionHeaderExpired: {},
-  sectionTitle: {
-    fontFamily: Fonts.bold,
-    fontSize: FontSizes.lg,
-    color: Colors.textPrimary,
-  },
-  sectionTitleUrgent: {
-    color: Colors.destructive,
-  },
-  sectionTitleExpired: {
-    color: Colors.destructive,
-  },
-  alertCard: {
-    padding: Spacing.lg,
-    marginBottom: Spacing.sm,
-    ...Shadows.sm,
-  },
-  alertRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  alertMain: {
-    flex: 1,
-    marginRight: Spacing.md,
-  },
-  alertName: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes.md,
-    color: Colors.textPrimary,
-  },
-  alertMeta: {
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.sm,
-    color: Colors.textSecondary,
-    marginTop: Spacing.xs,
-  },
-  alertRight: {
-    alignItems: 'flex-end',
-  },
-  alertDays: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes.sm,
-    color: Colors.warning,
-  },
-  alertDaysUrgent: {
-    color: Colors.destructive,
-  },
-  settingsLink: {
-    marginTop: Spacing.xl,
-    alignItems: 'center',
-  },
-  settingsLinkText: {
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.sm,
-    color: Colors.textMuted,
-  },
-  bottomPad: {
-    height: Spacing['2xl'],
-  },
-});

@@ -1,4 +1,5 @@
-export const Colors = {
+/** Light theme palette (default) */
+export const LightColors = {
   primary: '#10B981',
   primaryDark: '#059669',
   primaryLight: 'rgba(5, 150, 105, 0.12)',
@@ -19,6 +20,35 @@ export const Colors = {
   black: '#000000',
   overlay: 'rgba(0, 0, 0, 0.5)',
 };
+
+/** Dark theme palette */
+export const DarkColors = {
+  primary: '#34D399',
+  primaryDark: '#10B981',
+  primaryLight: 'rgba(52, 211, 153, 0.2)',
+  background: '#111827',
+  card: '#1F2937',
+  textPrimary: '#F9FAFB',
+  textSecondary: '#9CA3AF',
+  textMuted: '#6B7280',
+  border: '#374151',
+  borderLight: '#1F2937',
+  destructive: '#F87171',
+  destructiveLight: '#7F1D1D',
+  warning: '#FBBF24',
+  warningLight: '#78350F',
+  success: '#34D399',
+  successLight: '#064E3B',
+  white: '#FFFFFF',
+  black: '#000000',
+  overlay: 'rgba(0, 0, 0, 0.7)',
+};
+
+/** Theme color palette type (use useTheme().colors in components for dark mode). */
+export type ColorPalette = typeof LightColors;
+
+/** @deprecated Use useTheme().colors instead for dark mode support */
+export const Colors = LightColors;
 
 export const Fonts = {
   regular: 'Satoshi-Regular',

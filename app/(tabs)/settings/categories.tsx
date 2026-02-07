@@ -2,7 +2,7 @@
  * Categories — list, add, edit, delete (with warning if products use it).
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import {
   Platform,
 } from 'react-native';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useTheme } from '../../../contexts/ThemeContext';
 import { useCategories } from '../../../lib/hooks/useCategories';
 import { useProducts } from '../../../lib/hooks/useProducts';
 import {
@@ -26,14 +27,91 @@ import {
 import { useToast } from '../../../components/ui/Toast';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
-import { Colors, Fonts, FontSizes, Spacing } from '../../../constants/theme';
+import { Fonts, FontSizes, Spacing } from '../../../constants/theme';
 import type { Category } from '../../../lib/types/database';
 
 export default function CategoriesScreen() {
+  const { colors } = useTheme();
   const { user } = useAuth();
   const { data: categories, loading, refetch } = useCategories(user?.id);
   const { data: products } = useProducts(user?.id);
   const { success, error: showError } = useToast();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: colors.background },
+        listContent: { padding: Spacing.lg, paddingBottom: Spacing['2xl'] },
+        empty: {
+          fontFamily: Fonts.regular,
+          fontSize: FontSizes.md,
+          color: colors.textSecondary,
+          textAlign: 'center',
+          marginTop: Spacing.xl,
+        },
+        row: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: colors.card,
+          borderRadius: 8,
+          borderWidth: 1,
+          borderColor: colors.border,
+          padding: Spacing.lg,
+          marginBottom: Spacing.sm,
+        },
+        rowMain: { flex: 1 },
+        name: {
+          fontFamily: Fonts.medium,
+          fontSize: FontSizes.md,
+          color: colors.textPrimary,
+        },
+        desc: {
+          fontFamily: Fonts.regular,
+          fontSize: FontSizes.sm,
+          color: colors.textSecondary,
+          marginTop: Spacing.xs,
+        },
+        count: {
+          fontFamily: Fonts.regular,
+          fontSize: FontSizes.xs,
+          color: colors.textMuted,
+          marginTop: Spacing.xs,
+        },
+        deleteBtn: { padding: Spacing.sm, marginLeft: Spacing.sm },
+        deleteText: {
+          fontFamily: Fonts.medium,
+          fontSize: FontSizes.sm,
+          color: colors.destructive,
+        },
+        addBtn: { margin: Spacing.lg },
+        modalOverlay: {
+          flex: 1,
+          justifyContent: 'center',
+          padding: Spacing.lg,
+        },
+        modalBackdrop: {
+          ...StyleSheet.absoluteFillObject,
+          backgroundColor: colors.overlay,
+        },
+        modalContent: {
+          backgroundColor: colors.card,
+          borderRadius: 12,
+          padding: Spacing.xl,
+        },
+        modalTitle: {
+          fontFamily: Fonts.bold,
+          fontSize: FontSizes.lg,
+          color: colors.textPrimary,
+          marginBottom: Spacing.lg,
+        },
+        modalActions: {
+          flexDirection: 'row',
+          justifyContent: 'flex-end',
+          gap: Spacing.md,
+          marginTop: Spacing.lg,
+        },
+      }),
+    [colors]
+  );
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -197,88 +275,3 @@ export default function CategoriesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  listContent: {
-    padding: Spacing.lg,
-    paddingBottom: Spacing['2xl'],
-  },
-  empty: {
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.md,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    marginTop: Spacing.xl,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.card,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: Spacing.lg,
-    marginBottom: Spacing.sm,
-  },
-  rowMain: {
-    flex: 1,
-  },
-  name: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes.md,
-    color: Colors.textPrimary,
-  },
-  desc: {
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.sm,
-    color: Colors.textSecondary,
-    marginTop: Spacing.xs,
-  },
-  count: {
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.xs,
-    color: Colors.textMuted,
-    marginTop: Spacing.xs,
-  },
-  deleteBtn: {
-    padding: Spacing.sm,
-    marginLeft: Spacing.sm,
-  },
-  deleteText: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes.sm,
-    color: Colors.destructive,
-  },
-  addBtn: {
-    margin: Spacing.lg,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: Spacing.lg,
-  },
-  modalBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: Colors.overlay,
-  },
-  modalContent: {
-    backgroundColor: Colors.card,
-    borderRadius: 12,
-    padding: Spacing.xl,
-  },
-  modalTitle: {
-    fontFamily: Fonts.bold,
-    fontSize: FontSizes.lg,
-    color: Colors.textPrimary,
-    marginBottom: Spacing.lg,
-  },
-  modalActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: Spacing.md,
-    marginTop: Spacing.lg,
-  },
-});

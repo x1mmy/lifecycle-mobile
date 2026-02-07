@@ -2,7 +2,7 @@
  * Product detail — info header, batches list, add batch, delete product.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useTheme } from '../../../contexts/ThemeContext';
 import {
   getProduct,
   updateProduct,
@@ -27,7 +28,7 @@ import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { Modal } from '../../../components/ui/Modal';
-import { Colors, Fonts, FontSizes, Spacing } from '../../../constants/theme';
+import { Fonts, FontSizes, Spacing } from '../../../constants/theme';
 import { formatDate } from '../../../lib/utils/date';
 import type { ProductWithBatches, ProductBatch } from '../../../lib/types/database';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -49,11 +50,107 @@ function earliestExpiry(batches: ProductBatch[] | null): string | null {
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { colors } = useTheme();
   const { user } = useAuth();
   const { success, error: showError } = useToast();
   const [product, setProduct] = useState<ProductWithBatches | null>(null);
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: colors.background },
+        content: { padding: Spacing.lg, paddingBottom: Spacing['4xl'] },
+        centered: {
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: colors.background,
+        },
+        muted: {
+          fontFamily: Fonts.regular,
+          fontSize: FontSizes.md,
+          color: colors.textSecondary,
+          marginBottom: Spacing.lg,
+        },
+        errorText: {
+          fontFamily: Fonts.regular,
+          fontSize: FontSizes.md,
+          color: colors.destructive,
+          marginBottom: Spacing.lg,
+          textAlign: 'center',
+          paddingHorizontal: Spacing.xl,
+        },
+        retryBtn: { minWidth: 160 },
+        header: { padding: Spacing.lg, marginBottom: Spacing.xl },
+        name: {
+          fontFamily: Fonts.bold,
+          fontSize: FontSizes.xl,
+          color: colors.textPrimary,
+          marginBottom: Spacing.xs,
+        },
+        meta: {
+          fontFamily: Fonts.regular,
+          fontSize: FontSizes.sm,
+          color: colors.textSecondary,
+          marginTop: Spacing.xs,
+        },
+        notes: {
+          fontFamily: Fonts.regular,
+          fontSize: FontSizes.sm,
+          color: colors.textMuted,
+          marginTop: Spacing.sm,
+        },
+        sectionTitle: {
+          fontFamily: Fonts.medium,
+          fontSize: FontSizes.lg,
+          color: colors.textPrimary,
+          marginBottom: Spacing.md,
+        },
+        batchCard: { padding: Spacing.lg, marginBottom: Spacing.sm },
+        batchRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' },
+        batchMain: { flex: 1, minWidth: 120 },
+        batchExpiry: {
+          fontFamily: Fonts.medium,
+          fontSize: FontSizes.md,
+          color: colors.textPrimary,
+        },
+        batchMeta: {
+          fontFamily: Fonts.regular,
+          fontSize: FontSizes.sm,
+          color: colors.textSecondary,
+          marginTop: Spacing.xs,
+        },
+        deleteBatchBtn: { padding: Spacing.sm, marginLeft: Spacing.sm },
+        deleteBatchText: {
+          fontFamily: Fonts.medium,
+          fontSize: FontSizes.sm,
+          color: colors.destructive,
+        },
+        addBatchBtn: { paddingVertical: Spacing.md, marginBottom: Spacing.xl },
+        addBatchText: {
+          fontFamily: Fonts.medium,
+          fontSize: FontSizes.md,
+          color: colors.primary,
+        },
+        deleteProductBtn: { marginTop: Spacing.lg },
+        dateInput: {
+          padding: Spacing.lg,
+          backgroundColor: colors.background,
+          borderRadius: 8,
+          borderWidth: 1,
+          borderColor: colors.border,
+          marginBottom: Spacing.md,
+        },
+        dateInputText: {
+          fontFamily: Fonts.regular,
+          fontSize: FontSizes.md,
+          color: colors.textPrimary,
+        },
+      }),
+    [colors]
+  );
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [addingBatch, setAddingBatch] = useState(false);
   const [newExpiry, setNewExpiry] = useState(toDateStr(today));
@@ -62,11 +159,15 @@ export default function ProductDetailScreen() {
 
   const load = async () => {
     if (!id) return;
+    setLoadError(null);
+    setLoading(true);
     try {
       const p = await getProduct(id);
       setProduct(p);
     } catch (e) {
-      showError(e instanceof Error ? e.message : 'Failed to load');
+      const msg = e instanceof Error ? e.message : 'Failed to load';
+      setLoadError(msg);
+      showError(msg);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -138,7 +239,7 @@ export default function ProductDetailScreen() {
     }
   };
 
-  if (!id || (!loading && !product)) {
+  if (!id) {
     return (
       <View style={styles.centered}>
         <Text style={styles.muted}>Product not found</Text>
@@ -146,10 +247,27 @@ export default function ProductDetailScreen() {
     );
   }
 
-  if (loading && !product) {
+  if (loading && !product && !loadError) {
     return (
       <View style={styles.centered}>
         <Text style={styles.muted}>Loading…</Text>
+      </View>
+    );
+  }
+
+  if (loadError && !product) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.errorText}>{loadError}</Text>
+        <Button title="Try Again" onPress={load} style={styles.retryBtn} />
+      </View>
+    );
+  }
+
+  if (!product) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.muted}>Product not found</Text>
       </View>
     );
   }
@@ -265,110 +383,3 @@ export default function ProductDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  content: {
-    padding: Spacing.lg,
-    paddingBottom: Spacing['4xl'],
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.background,
-  },
-  muted: {
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.md,
-    color: Colors.textSecondary,
-  },
-  header: {
-    padding: Spacing.lg,
-    marginBottom: Spacing.xl,
-  },
-  name: {
-    fontFamily: Fonts.bold,
-    fontSize: FontSizes.xl,
-    color: Colors.textPrimary,
-    marginBottom: Spacing.xs,
-  },
-  meta: {
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.sm,
-    color: Colors.textSecondary,
-    marginTop: Spacing.xs,
-  },
-  notes: {
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.sm,
-    color: Colors.textMuted,
-    marginTop: Spacing.sm,
-  },
-  sectionTitle: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes.lg,
-    color: Colors.textPrimary,
-    marginBottom: Spacing.md,
-  },
-  batchCard: {
-    padding: Spacing.lg,
-    marginBottom: Spacing.sm,
-  },
-  batchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-  },
-  batchMain: {
-    flex: 1,
-    minWidth: 120,
-  },
-  batchExpiry: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes.md,
-    color: Colors.textPrimary,
-  },
-  batchMeta: {
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.sm,
-    color: Colors.textSecondary,
-    marginTop: Spacing.xs,
-  },
-  deleteBatchBtn: {
-    padding: Spacing.sm,
-    marginLeft: Spacing.sm,
-  },
-  deleteBatchText: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes.sm,
-    color: Colors.destructive,
-  },
-  addBatchBtn: {
-    paddingVertical: Spacing.md,
-    marginBottom: Spacing.xl,
-  },
-  addBatchText: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes.md,
-    color: Colors.primary,
-  },
-  deleteProductBtn: {
-    marginTop: Spacing.lg,
-  },
-  dateInput: {
-    padding: Spacing.lg,
-    backgroundColor: Colors.background,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    marginBottom: Spacing.md,
-  },
-  dateInputText: {
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.md,
-    color: Colors.textPrimary,
-  },
-});

@@ -2,7 +2,7 @@
  * Add/Edit Product — Quick Add: Scan CTA, compact form, Save & Add Next.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useTheme } from '../../../contexts/ThemeContext';
 import { useCategories } from '../../../lib/hooks/useCategories';
 import {
   getProduct,
@@ -26,8 +27,9 @@ import {
 import { useToast } from '../../../components/ui/Toast';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
+import { FilterChips } from '../../../components/ui/FilterChips';
 import { AnimatedPressable } from '../../../components/ui/AnimatedPressable';
-import { Colors, Fonts, FontSizes, Spacing, BorderRadius, Shadows } from '../../../constants/theme';
+import { Fonts, FontSizes, Spacing, BorderRadius, Shadows } from '../../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import type { ProductInsert, ProductBatch } from '../../../lib/types/database';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -52,11 +54,137 @@ function formatExpiryDisplay(iso: string): string {
 }
 
 export default function AddProductScreen() {
+  const { colors } = useTheme();
   const { user } = useAuth();
   const params = useLocalSearchParams<{ id?: string; barcode?: string; name?: string; category?: string }>();
   const isEdit = !!params.id;
   const { data: categories } = useCategories(user?.id);
   const { success, error: showError } = useToast();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: colors.background },
+        scroll: { flex: 1 },
+        scrollContent: { padding: Spacing.lg, paddingBottom: Spacing['4xl'] },
+        scanCta: {
+          backgroundColor: '#1E293B',
+          borderRadius: BorderRadius.lg,
+          padding: Spacing.xl,
+          alignItems: 'center',
+          marginBottom: Spacing.xl,
+          ...Shadows.md,
+        },
+        scanCtaTitle: {
+          fontFamily: Fonts.bold,
+          fontSize: FontSizes.lg,
+          color: colors.white,
+          marginTop: Spacing.md,
+        },
+        scanCtaSub: {
+          fontFamily: Fonts.regular,
+          fontSize: FontSizes.sm,
+          color: colors.textMuted,
+          marginTop: Spacing.xs,
+        },
+        quickField: { marginBottom: Spacing.md },
+        categorySection: { marginBottom: Spacing.md },
+        categoryLabel: {
+          fontFamily: Fonts.medium,
+          fontSize: FontSizes.sm,
+          color: colors.textPrimary,
+          marginBottom: Spacing.xs,
+        },
+        categoryInput: { marginTop: Spacing.sm, marginBottom: 0 },
+        justAddedSection: {
+          marginTop: Spacing.xl,
+          paddingTop: Spacing.xl,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+        },
+        justAddedTitle: {
+          fontFamily: Fonts.bold,
+          fontSize: FontSizes.md,
+          color: colors.textPrimary,
+          marginBottom: Spacing.md,
+        },
+        justAddedRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: Spacing.sm,
+          marginBottom: Spacing.sm,
+        },
+        justAddedText: {
+          fontFamily: Fonts.regular,
+          fontSize: FontSizes.sm,
+          color: colors.textSecondary,
+          flex: 1,
+        },
+        loading: {
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: colors.background,
+        },
+        loadingText: {
+          fontFamily: Fonts.regular,
+          fontSize: FontSizes.md,
+          color: colors.textSecondary,
+        },
+        barcodeRow: { flexDirection: 'row', alignItems: 'flex-end', gap: Spacing.md },
+        barcodeInput: { flex: 1 },
+        scanBtn: { minWidth: 80 },
+        sectionTitle: {
+          fontFamily: Fonts.medium,
+          fontSize: FontSizes.lg,
+          color: colors.textPrimary,
+          marginTop: Spacing.xl,
+          marginBottom: Spacing.md,
+        },
+        batchCard: {
+          backgroundColor: colors.card,
+          borderRadius: BorderRadius.md,
+          borderWidth: 1,
+          borderColor: colors.border,
+          padding: Spacing.lg,
+          marginBottom: Spacing.md,
+        },
+        batchRow: { marginBottom: Spacing.md },
+        batchLabel: {
+          fontFamily: Fonts.medium,
+          fontSize: FontSizes.sm,
+          color: colors.textPrimary,
+          marginBottom: Spacing.xs,
+        },
+        dateBtn: {
+          paddingVertical: Spacing.md,
+          paddingHorizontal: Spacing.lg,
+          backgroundColor: colors.background,
+          borderRadius: BorderRadius.md,
+          borderWidth: 1,
+          borderColor: colors.border,
+        },
+        dateBtnText: {
+          fontFamily: Fonts.regular,
+          fontSize: FontSizes.md,
+          color: colors.textPrimary,
+        },
+        removeBatch: { marginTop: Spacing.sm, paddingVertical: Spacing.sm },
+        removeBatchText: {
+          fontFamily: Fonts.medium,
+          fontSize: FontSizes.sm,
+          color: colors.destructive,
+        },
+        addBatch: { paddingVertical: Spacing.md, marginBottom: Spacing.lg },
+        addBatchText: {
+          fontFamily: Fonts.medium,
+          fontSize: FontSizes.md,
+          color: colors.primary,
+        },
+        saveBtn: { marginTop: Spacing.md },
+        bottomPad: { height: Spacing['2xl'] },
+      }),
+    [colors]
+  );
 
   const [name, setName] = useState('');
   const [category, setCategory] = useState('');
@@ -245,7 +373,7 @@ export default function AddProductScreen() {
         showsVerticalScrollIndicator={false}
       >
         <AnimatedPressable onPress={openScan} style={styles.scanCta} haptic>
-          <Ionicons name="barcode" size={32} color={Colors.white} />
+          <Ionicons name="barcode" size={32} color={colors.white} />
           <Text style={styles.scanCtaTitle}>Scan Barcode to Auto-fill</Text>
           <Text style={styles.scanCtaSub}>or enter manually</Text>
         </AnimatedPressable>
@@ -285,12 +413,22 @@ export default function AddProductScreen() {
           keyboardType="number-pad"
           containerStyle={styles.quickField}
         />
-        <Input
-          label="Category *"
-          value={category}
-          onChangeText={setCategory}
-          placeholder="e.g. Dairy"
-        />
+        <View style={styles.categorySection}>
+          <Text style={styles.categoryLabel}>Category *</Text>
+          {categories.length > 0 && (
+            <FilterChips
+              options={categories.map((c) => ({ value: c.name, label: c.name }))}
+              selected={category}
+              onSelect={setCategory}
+            />
+          )}
+          <Input
+            value={category}
+            onChangeText={setCategory}
+            placeholder="e.g. Dairy"
+            containerStyle={styles.categoryInput}
+          />
+        </View>
         <Input
           label="Batch #"
           value={batches[0]?.batch_number ?? ''}
@@ -380,7 +518,7 @@ export default function AddProductScreen() {
             <Text style={styles.justAddedTitle}>Just Added</Text>
             {justAdded.map((item, i) => (
               <View key={i} style={styles.justAddedRow}>
-                <Ionicons name="checkmark-circle" size={20} color={Colors.primary} />
+                <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
                 <Text style={styles.justAddedText}>
                   {item.name} — Expires {formatExpiryDisplay(item.expiry)}
                   {item.qty != null ? ` - Qty: ${item.qty}` : ''}
@@ -395,146 +533,3 @@ export default function AddProductScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: Spacing.lg,
-    paddingBottom: Spacing['4xl'],
-  },
-  scanCta: {
-    backgroundColor: '#1E293B',
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.xl,
-    alignItems: 'center',
-    marginBottom: Spacing.xl,
-    ...Shadows.md,
-  },
-  scanCtaTitle: {
-    fontFamily: Fonts.bold,
-    fontSize: FontSizes.lg,
-    color: Colors.white,
-    marginTop: Spacing.md,
-  },
-  scanCtaSub: {
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.sm,
-    color: Colors.textMuted,
-    marginTop: Spacing.xs,
-  },
-  quickField: {
-    marginBottom: Spacing.md,
-  },
-  justAddedSection: {
-    marginTop: Spacing.xl,
-    paddingTop: Spacing.xl,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  justAddedTitle: {
-    fontFamily: Fonts.bold,
-    fontSize: FontSizes.md,
-    color: Colors.textPrimary,
-    marginBottom: Spacing.md,
-  },
-  justAddedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.sm,
-  },
-  justAddedText: {
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.sm,
-    color: Colors.textSecondary,
-    flex: 1,
-  },
-  loading: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.background,
-  },
-  loadingText: {
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.md,
-    color: Colors.textSecondary,
-  },
-  barcodeRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: Spacing.md,
-  },
-  barcodeInput: {
-    flex: 1,
-  },
-  scanBtn: {
-    minWidth: 80,
-  },
-  sectionTitle: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes.lg,
-    color: Colors.textPrimary,
-    marginTop: Spacing.xl,
-    marginBottom: Spacing.md,
-  },
-  batchCard: {
-    backgroundColor: Colors.card,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: Spacing.lg,
-    marginBottom: Spacing.md,
-  },
-  batchRow: {
-    marginBottom: Spacing.md,
-  },
-  batchLabel: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes.sm,
-    color: Colors.textPrimary,
-    marginBottom: Spacing.xs,
-  },
-  dateBtn: {
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    backgroundColor: Colors.background,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  dateBtnText: {
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.md,
-    color: Colors.textPrimary,
-  },
-  removeBatch: {
-    marginTop: Spacing.sm,
-    paddingVertical: Spacing.sm,
-  },
-  removeBatchText: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes.sm,
-    color: Colors.destructive,
-  },
-  addBatch: {
-    paddingVertical: Spacing.md,
-    marginBottom: Spacing.lg,
-  },
-  addBatchText: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes.md,
-    color: Colors.primary,
-  },
-  saveBtn: {
-    marginTop: Spacing.md,
-  },
-  bottomPad: {
-    height: Spacing['2xl'],
-  },
-});

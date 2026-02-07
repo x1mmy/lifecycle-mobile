@@ -2,9 +2,10 @@
  * LoadingSkeleton — animated pulse placeholders.
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
-import { Colors, BorderRadius, Spacing } from '../../constants/theme';
+import { BorderRadius, Spacing } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface LoadingSkeletonProps {
   width?: number | string;
@@ -13,7 +14,15 @@ interface LoadingSkeletonProps {
 }
 
 export function LoadingSkeleton({ width = '100%', height = 20, style }: LoadingSkeletonProps) {
+  const { colors } = useTheme();
   const opacity = useRef(new Animated.Value(0.3)).current;
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        skeleton: { backgroundColor: colors.border, borderRadius: BorderRadius.sm },
+      }),
+    [colors]
+  );
 
   useEffect(() => {
     const loop = Animated.loop(
@@ -47,6 +56,22 @@ export function LoadingSkeleton({ width = '100%', height = 20, style }: LoadingS
 }
 
 export function ProductListSkeleton() {
+  const { colors } = useTheme();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        list: { padding: Spacing.lg },
+        row: {
+          backgroundColor: colors.card,
+          padding: Spacing.lg,
+          borderRadius: BorderRadius.md,
+          marginBottom: Spacing.md,
+          borderWidth: 1,
+          borderColor: colors.border,
+        },
+      }),
+    [colors]
+  );
   return (
     <View style={styles.list}>
       {[1, 2, 3, 4, 5].map((i) => (
@@ -59,21 +84,3 @@ export function ProductListSkeleton() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  skeleton: {
-    backgroundColor: Colors.border,
-    borderRadius: BorderRadius.sm,
-  },
-  list: {
-    padding: Spacing.lg,
-  },
-  row: {
-    backgroundColor: Colors.card,
-    padding: Spacing.lg,
-    borderRadius: BorderRadius.md,
-    marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-});

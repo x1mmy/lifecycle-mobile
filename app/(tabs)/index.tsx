@@ -2,7 +2,7 @@
  * Dashboard — LifeCycle branding, expiry alert, stats, Quick Add CTA, Expiring Soon list.
  */
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -17,7 +17,8 @@ import { useSettings } from '../../lib/hooks/useSettings';
 import { scheduleDailyAndWeeklyNotifications } from '../../lib/services/notifications';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Fonts, FontSizes, Spacing, BorderRadius, Shadows } from '../../constants/theme';
+import { Fonts, FontSizes, Spacing, BorderRadius, Shadows } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 import { daysUntil } from '../../constants/status';
 import { Card } from '../../components/ui/Card';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -60,11 +61,90 @@ function formatExpiryLabel(expiryDate: string): { text: string; urgent: boolean 
 }
 
 export default function DashboardScreen() {
+  const { colors } = useTheme();
   const { user } = useAuth();
   const { data: profile } = useProfile(user?.id);
   const { data: products, loading, refetch } = useProducts(user?.id);
   const { data: settings } = useSettings(user?.id);
   const [handledIds, setHandledIds] = useState<Set<string>>(new Set());
+  const [refreshing, setRefreshing] = useState(false);
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: colors.background },
+        scrollContent: { padding: Spacing.lg, paddingBottom: Spacing['4xl'] },
+        header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.lg },
+        brand: { fontFamily: Fonts.bold, fontSize: FontSizes['2xl'], color: colors.textPrimary },
+        brandPeriod: { color: colors.primary },
+        subtitle: { fontFamily: Fonts.regular, fontSize: FontSizes.sm, color: colors.textSecondary, marginTop: 2 },
+        avatar: {
+          width: 44,
+          height: 44,
+          borderRadius: BorderRadius.full,
+          backgroundColor: colors.primaryLight,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        avatarText: { fontFamily: Fonts.bold, fontSize: FontSizes.sm, color: colors.primary },
+        greeting: { fontFamily: Fonts.medium, fontSize: FontSizes.md, color: colors.textSecondary, marginBottom: Spacing.xs },
+        date: { fontFamily: Fonts.regular, fontSize: FontSizes.sm, color: colors.textMuted, marginBottom: Spacing.xl },
+        alertBanner: {
+          backgroundColor: colors.destructiveLight,
+          borderRadius: BorderRadius.md,
+          paddingVertical: Spacing.md,
+          paddingHorizontal: Spacing.lg,
+          marginBottom: Spacing.lg,
+          borderLeftWidth: 4,
+          borderLeftColor: colors.destructive,
+        },
+        alertText: { fontFamily: Fonts.medium, fontSize: FontSizes.sm, color: colors.destructive },
+        statsGrid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -Spacing.xs, marginBottom: Spacing.xl },
+        statCardWrap: { width: '48%', marginHorizontal: '1%', marginBottom: Spacing.md },
+        statCard: { padding: Spacing.lg, ...Shadows.sm },
+        statValue: { fontFamily: Fonts.bold, fontSize: FontSizes['3xl'], color: colors.textPrimary },
+        statLabel: { fontFamily: Fonts.regular, fontSize: FontSizes.xs, color: colors.textSecondary, marginTop: Spacing.xs },
+        statWarning: { color: colors.warning },
+        statDanger: { color: colors.destructive },
+        quickAddCta: {
+          backgroundColor: colors.primary,
+          borderRadius: BorderRadius.lg,
+          padding: Spacing.xl,
+          marginBottom: Spacing.xl,
+          alignItems: 'center',
+          ...Shadows.lg,
+        },
+        quickAddIcon: {
+          width: 56,
+          height: 56,
+          borderRadius: 28,
+          backgroundColor: 'rgba(255,255,255,0.25)',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: Spacing.md,
+        },
+        quickAddTitle: { fontFamily: Fonts.bold, fontSize: FontSizes.lg, color: colors.white, marginBottom: Spacing.xs },
+        quickAddSubtitle: { fontFamily: Fonts.regular, fontSize: FontSizes.sm, color: 'rgba(255,255,255,0.9)' },
+        section: { marginBottom: Spacing.xl },
+        sectionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.md },
+        sectionTitle: { fontFamily: Fonts.bold, fontSize: FontSizes.lg, color: colors.textPrimary },
+        expiringCard: { padding: Spacing.lg, marginBottom: Spacing.sm, ...Shadows.sm },
+        expiringRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+        expiringMain: { flex: 1, marginRight: Spacing.md },
+        expiringName: { fontFamily: Fonts.medium, fontSize: FontSizes.md, color: colors.textPrimary },
+        expiringMeta: { fontFamily: Fonts.regular, fontSize: FontSizes.sm, color: colors.textSecondary, marginTop: Spacing.xs },
+        expiringRight: { alignItems: 'flex-end' },
+        expiringDays: { fontFamily: Fonts.medium, fontSize: FontSizes.sm, color: colors.warning },
+        expiringDaysUrgent: { color: colors.destructive },
+        bottomPad: { height: Spacing['2xl'] },
+      }),
+    [colors]
+  );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  }, [refetch]);
 
   useEffect(() => {
     if (!settings?.daily_expiry_alerts_enabled || !products) return;
@@ -141,7 +221,14 @@ export default function DashboardScreen() {
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={refetch} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
       >
         <View style={styles.header}>
           <View>
@@ -171,7 +258,14 @@ export default function DashboardScreen() {
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
-      refreshControl={<RefreshControl refreshing={loading} onRefresh={refetch} />}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={colors.primary}
+          colors={[colors.primary]}
+        />
+      }
       showsVerticalScrollIndicator={false}
     >
       <FadeInView delay={0} duration={FADE_DURATION}>
@@ -184,6 +278,10 @@ export default function DashboardScreen() {
             <Text style={styles.avatarText}>{initials}</Text>
           </View>
         </View>
+        <Text style={styles.greeting}>{formatGreeting()}</Text>
+        <Text style={styles.date}>
+          {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+        </Text>
       </FadeInView>
 
       {expiringTodayCount > 0 && (
@@ -228,7 +326,7 @@ export default function DashboardScreen() {
           haptic
         >
           <View style={styles.quickAddIcon}>
-            <Ionicons name="add" size={28} color={Colors.white} />
+            <Ionicons name="add" size={28} color={colors.white} />
           </View>
           <Text style={styles.quickAddTitle}>Quick Add Products</Text>
           <Text style={styles.quickAddSubtitle}>Scan or type to add fast.</Text>
@@ -239,7 +337,7 @@ export default function DashboardScreen() {
         <View style={styles.section}>
           <FadeInView delay={STAGGER_MS * 7} duration={FADE_DURATION}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="warning" size={18} color={Colors.warning} />
+              <Ionicons name="warning" size={18} color={colors.warning} />
               <Text style={styles.sectionTitle}> Expiring Soon</Text>
             </View>
           </FadeInView>
@@ -289,184 +387,3 @@ export default function DashboardScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  scrollContent: {
-    padding: Spacing.lg,
-    paddingBottom: Spacing['4xl'],
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.lg,
-  },
-  brand: {
-    fontFamily: Fonts.bold,
-    fontSize: FontSizes['2xl'],
-    color: Colors.textPrimary,
-  },
-  brandPeriod: {
-    color: Colors.primary,
-  },
-  subtitle: {
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.sm,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    fontFamily: Fonts.bold,
-    fontSize: FontSizes.sm,
-    color: Colors.primary,
-  },
-  greeting: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes.md,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.xs,
-  },
-  date: {
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.sm,
-    color: Colors.textMuted,
-    marginBottom: Spacing.xl,
-  },
-  alertBanner: {
-    backgroundColor: Colors.destructiveLight,
-    borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.lg,
-    borderLeftWidth: 4,
-    borderLeftColor: Colors.destructive,
-  },
-  alertText: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes.sm,
-    color: Colors.destructive,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginHorizontal: -Spacing.xs,
-    marginBottom: Spacing.xl,
-  },
-  statCardWrap: {
-    width: '48%',
-    marginHorizontal: '1%',
-    marginBottom: Spacing.md,
-  },
-  statCard: {
-    padding: Spacing.lg,
-    ...Shadows.sm,
-  },
-  statValue: {
-    fontFamily: Fonts.bold,
-    fontSize: FontSizes['3xl'],
-    color: Colors.textPrimary,
-  },
-  statLabel: {
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.xs,
-    color: Colors.textSecondary,
-    marginTop: Spacing.xs,
-  },
-  statWarning: {
-    color: Colors.warning,
-  },
-  statDanger: {
-    color: Colors.destructive,
-  },
-  quickAddCta: {
-    backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.xl,
-    marginBottom: Spacing.xl,
-    alignItems: 'center',
-    ...Shadows.lg,
-  },
-  quickAddIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.md,
-  },
-  quickAddTitle: {
-    fontFamily: Fonts.bold,
-    fontSize: FontSizes.lg,
-    color: Colors.white,
-    marginBottom: Spacing.xs,
-  },
-  quickAddSubtitle: {
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.sm,
-    color: 'rgba(255,255,255,0.9)',
-  },
-  section: {
-    marginBottom: Spacing.xl,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.md,
-  },
-  sectionTitle: {
-    fontFamily: Fonts.bold,
-    fontSize: FontSizes.lg,
-    color: Colors.textPrimary,
-  },
-  expiringCard: {
-    padding: Spacing.lg,
-    marginBottom: Spacing.sm,
-    ...Shadows.sm,
-  },
-  expiringRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  expiringMain: {
-    flex: 1,
-    marginRight: Spacing.md,
-  },
-  expiringName: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes.md,
-    color: Colors.textPrimary,
-  },
-  expiringMeta: {
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.sm,
-    color: Colors.textSecondary,
-    marginTop: Spacing.xs,
-  },
-  expiringRight: {
-    alignItems: 'flex-end',
-  },
-  expiringDays: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes.sm,
-    color: Colors.warning,
-  },
-  expiringDaysUrgent: {
-    color: Colors.destructive,
-  },
-  bottomPad: {
-    height: Spacing['2xl'],
-  },
-});

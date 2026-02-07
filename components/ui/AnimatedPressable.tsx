@@ -15,6 +15,8 @@ interface AnimatedPressableProps {
   style?: ViewStyle;
   haptic?: boolean;
   disabled?: boolean;
+  accessibilityLabel?: string;
+  accessibilityRole?: 'button' | 'link' | 'menuitem' | 'none';
 }
 
 export function AnimatedPressable({
@@ -23,6 +25,8 @@ export function AnimatedPressable({
   style,
   haptic = false,
   disabled = false,
+  accessibilityLabel,
+  accessibilityRole = 'button',
 }: AnimatedPressableProps) {
   const scale = useRef(new Animated.Value(1)).current;
 
@@ -57,6 +61,8 @@ export function AnimatedPressable({
       onPressCancel={handlePressOut}
       disabled={disabled}
       style={styles.wrapper}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole={accessibilityRole}
     >
       <Animated.View style={[styles.inner, style, { transform: [{ scale }] }]}>
         {children}

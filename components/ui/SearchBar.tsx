@@ -2,9 +2,11 @@
  * SearchBar — search icon + input + clear, debounced onChange.
  */
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { View, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { Colors, Fonts, FontSizes, Spacing, BorderRadius } from '../../constants/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { Fonts, FontSizes, Spacing, BorderRadius } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface SearchBarProps {
   value: string;
@@ -19,6 +21,7 @@ export function SearchBar({
   placeholder = 'Search…',
   debounceMs = 300,
 }: SearchBarProps) {
+  const { colors } = useTheme();
   const [localValue, setLocalValue] = useState(value);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -47,15 +50,45 @@ export function SearchBar({
     onChangeText('');
   };
 
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        wrap: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: colors.card,
+          borderRadius: BorderRadius.md,
+          borderWidth: 1,
+          borderColor: colors.border,
+          paddingHorizontal: Spacing.md,
+        },
+        icon: { marginRight: Spacing.sm },
+        input: {
+          flex: 1,
+          fontFamily: Fonts.regular,
+          fontSize: FontSizes.md,
+          color: colors.textPrimary,
+          paddingVertical: Spacing.md,
+        },
+        clear: {
+          fontFamily: Fonts.medium,
+          fontSize: FontSizes.sm,
+          color: colors.textMuted,
+          padding: Spacing.xs,
+        },
+      }),
+    [colors]
+  );
+
   return (
     <View style={styles.wrap}>
-      <Text style={styles.icon}>🔍</Text>
+      <Ionicons name="search" size={20} color={colors.textMuted} style={styles.icon} />
       <TextInput
         style={styles.input}
         value={localValue}
         onChangeText={handleChange}
         placeholder={placeholder}
-        placeholderTextColor={Colors.textMuted}
+        placeholderTextColor={colors.textMuted}
         returnKeyType="search"
       />
       {localValue.length > 0 ? (
@@ -66,32 +99,3 @@ export function SearchBar({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.card,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: Spacing.md,
-  },
-  icon: {
-    fontSize: FontSizes.md,
-    marginRight: Spacing.sm,
-  },
-  input: {
-    flex: 1,
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.md,
-    color: Colors.textPrimary,
-    paddingVertical: Spacing.md,
-  },
-  clear: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes.sm,
-    color: Colors.textMuted,
-    padding: Spacing.xs,
-  },
-});

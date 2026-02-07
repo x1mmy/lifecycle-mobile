@@ -5,18 +5,20 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Fonts, FontSizes, Spacing, BorderRadius } from '../../constants/theme';
-import { getProductStatus, getStatusLabel, daysUntil, StatusColors } from '../../constants/status';
-import type { ProductStatus } from '../../constants/status';
+import { useTheme } from '../../contexts/ThemeContext';
+import { getProductStatus, getStatusLabel, daysUntil, getStatusColors } from '../../constants/status';
 
 interface StatusBadgeProps {
   expiryDate: string;
 }
 
 export function StatusBadge({ expiryDate }: StatusBadgeProps) {
+  const { colors: themeColors } = useTheme();
+  const statusColors = getStatusColors(themeColors);
   const status = getProductStatus(expiryDate);
   const days = daysUntil(expiryDate);
   const label = getStatusLabel(status, days);
-  const colors = StatusColors[status];
+  const colors = statusColors[status];
 
   return (
     <View style={[styles.badge, { backgroundColor: colors.bg, borderColor: colors.border }]}>

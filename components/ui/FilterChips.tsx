@@ -2,9 +2,10 @@
  * FilterChips — horizontal scrollable chips, single or multi select.
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { Colors, Fonts, FontSizes, Spacing, BorderRadius } from '../../constants/theme';
+import { Fonts, FontSizes, Spacing, BorderRadius } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export interface ChipOption {
   value: string;
@@ -20,9 +21,33 @@ interface FilterChipsProps {
 }
 
 export function FilterChips({ options, selected, onSelect, multi = false }: FilterChipsProps) {
+  const { colors } = useTheme();
   const isSelected = (value: string) =>
     Array.isArray(selected) ? selected.includes(value) : selected === value;
-
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flexDirection: 'row',
+          gap: Spacing.sm,
+          paddingVertical: Spacing.sm,
+        },
+        chip: {
+          paddingHorizontal: Spacing.lg,
+          paddingVertical: Spacing.md,
+          borderRadius: BorderRadius.full,
+          backgroundColor: colors.borderLight,
+        },
+        chipActive: { backgroundColor: colors.primary },
+        label: {
+          fontFamily: Fonts.medium,
+          fontSize: FontSizes.sm,
+          color: colors.textSecondary,
+        },
+        labelActive: { color: colors.white },
+      }),
+    [colors]
+  );
   return (
     <ScrollView
       horizontal
@@ -48,28 +73,3 @@ export function FilterChips({ options, selected, onSelect, multi = false }: Filt
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    paddingVertical: Spacing.sm,
-  },
-  chip: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.borderLight,
-  },
-  chipActive: {
-    backgroundColor: Colors.primary,
-  },
-  label: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes.sm,
-    color: Colors.textSecondary,
-  },
-  labelActive: {
-    color: Colors.white,
-  },
-});

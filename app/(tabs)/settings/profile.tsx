@@ -2,20 +2,31 @@
  * Business Profile — Business Name, Email (read-only), Phone, Address.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useTheme } from '../../../contexts/ThemeContext';
 import { useProfile } from '../../../lib/hooks/useProfile';
 import { updateProfile } from '../../../lib/services/settings';
 import { useToast } from '../../../components/ui/Toast';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
-import { Colors, Fonts, FontSizes, Spacing } from '../../../constants/theme';
+import { Fonts, FontSizes, Spacing } from '../../../constants/theme';
 
 export default function ProfileScreen() {
+  const { colors } = useTheme();
   const { user } = useAuth();
   const { data: profile, loading, refetch } = useProfile(user?.id);
   const { success, error: showError } = useToast();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: colors.background },
+        content: { padding: Spacing.lg, paddingBottom: Spacing['4xl'] },
+        saveBtn: { marginTop: Spacing.lg },
+      }),
+    [colors]
+  );
 
   const [businessName, setBusinessName] = useState('');
   const [phone, setPhone] = useState('');
@@ -88,16 +99,3 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  content: {
-    padding: Spacing.lg,
-    paddingBottom: Spacing['4xl'],
-  },
-  saveBtn: {
-    marginTop: Spacing.lg,
-  },
-});

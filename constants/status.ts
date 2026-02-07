@@ -1,4 +1,4 @@
-import { Colors } from './theme';
+import type { ColorPalette } from './theme';
 
 export type ProductStatus = 'expired' | 'warning' | 'good';
 
@@ -25,8 +25,11 @@ export function getStatusLabel(status: ProductStatus, days: number): string {
   return 'Good';
 }
 
-export const StatusColors: Record<ProductStatus, { bg: string; text: string; border: string }> = {
-  expired: { bg: Colors.destructiveLight, text: Colors.destructive, border: '#FECACA' },
-  warning: { bg: Colors.warningLight, text: Colors.warning, border: '#FDE68A' },
-  good: { bg: Colors.successLight, text: Colors.primaryDark, border: '#A7F3D0' },
-};
+/** Theme-aware status colors. Pass useTheme().colors from a component. */
+export function getStatusColors(colors: ColorPalette): Record<ProductStatus, { bg: string; text: string; border: string }> {
+  return {
+    expired: { bg: colors.destructiveLight, text: colors.destructive, border: colors.destructiveLight },
+    warning: { bg: colors.warningLight, text: colors.warning, border: colors.warningLight },
+    good: { bg: colors.successLight, text: colors.primaryDark, border: colors.successLight },
+  };
+}

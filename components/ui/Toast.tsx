@@ -3,8 +3,9 @@
  */
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
-import { Colors, Fonts, FontSizes, Spacing, BorderRadius } from '../../constants/theme';
+import { View, Text, StyleSheet, Animated } from 'react-native';
+import { Fonts, FontSizes, Spacing, BorderRadius } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 
 type ToastType = 'success' | 'error' | 'info';
 
@@ -61,6 +62,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 }
 
 function ToastItem({ toast, onDismiss }: { toast: ToastMessage; onDismiss: () => void }) {
+  const { colors } = useTheme();
   const anim = React.useRef(new Animated.Value(-100)).current;
 
   useEffect(() => {
@@ -77,14 +79,14 @@ function ToastItem({ toast, onDismiss }: { toast: ToastMessage; onDismiss: () =>
 
   const bg =
     toast.type === 'success'
-      ? Colors.primary
+      ? colors.primary
       : toast.type === 'error'
-        ? Colors.destructive
-        : Colors.textPrimary;
+        ? colors.destructive
+        : colors.textPrimary;
 
   return (
     <Animated.View style={[styles.toast, { backgroundColor: bg }, { transform: [{ translateY: anim }] }]} pointerEvents="none">
-      <Text style={styles.toastText} numberOfLines={2}>
+      <Text style={[styles.toastText, { color: colors.white }]} numberOfLines={2}>
         {toast.message}
       </Text>
     </Animated.View>
@@ -110,6 +112,5 @@ const styles = StyleSheet.create({
   toastText: {
     fontFamily: Fonts.medium,
     fontSize: FontSizes.sm,
-    color: Colors.white,
   },
 });

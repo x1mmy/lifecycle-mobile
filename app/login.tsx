@@ -2,11 +2,10 @@
  * Login Screen — LifeCycle auth (login/signup).
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
@@ -15,11 +14,90 @@ import {
   ScrollView,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { router, Link } from 'expo-router';
-import { Colors, Fonts, FontSizes, Spacing, BorderRadius, MIN_TOUCH_TARGET } from '../constants/theme';
+import { Input } from '../components/ui/Input';
+import { Fonts, FontSizes, Spacing, BorderRadius, MIN_TOUCH_TARGET } from '../constants/theme';
 
 export default function LoginScreen() {
+  const { colors } = useTheme();
   const { signIn, signUp, user } = useAuth();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: colors.background },
+        scrollContent: {
+          flexGrow: 1,
+          justifyContent: 'center',
+          paddingHorizontal: Spacing['2xl'],
+          paddingVertical: Spacing['4xl'],
+        },
+        formContainer: { width: '100%' },
+        title: {
+          fontFamily: Fonts.bold,
+          fontSize: FontSizes['4xl'],
+          textAlign: 'center',
+          marginBottom: Spacing.sm,
+          color: colors.textPrimary,
+        },
+        titlePeriod: { color: colors.primary },
+        subtitle: {
+          fontFamily: Fonts.regular,
+          fontSize: FontSizes.md,
+          textAlign: 'center',
+          color: colors.textSecondary,
+          marginBottom: Spacing['4xl'],
+        },
+        modeTitle: {
+          fontFamily: Fonts.medium,
+          fontSize: FontSizes['2xl'],
+          marginBottom: Spacing['2xl'],
+          color: colors.textPrimary,
+        },
+        showPasswordText: { fontFamily: Fonts.medium, fontSize: FontSizes.sm, color: colors.primary },
+        forgotLink: {
+          alignSelf: 'flex-end',
+          marginBottom: Spacing.md,
+          minHeight: MIN_TOUCH_TARGET,
+          justifyContent: 'center',
+        },
+        forgotText: { fontFamily: Fonts.medium, fontSize: FontSizes.sm, color: colors.primary },
+        errorText: {
+          fontFamily: Fonts.regular,
+          color: colors.destructive,
+          fontSize: FontSizes.sm,
+          marginBottom: Spacing.md,
+          textAlign: 'center',
+        },
+        button: {
+          backgroundColor: colors.primary,
+          paddingVertical: Spacing.lg,
+          borderRadius: BorderRadius.md,
+          alignItems: 'center',
+          marginTop: Spacing.sm,
+          minHeight: MIN_TOUCH_TARGET,
+          justifyContent: 'center',
+        },
+        buttonDisabled: { backgroundColor: colors.textMuted },
+        buttonText: {
+          fontFamily: Fonts.medium,
+          color: colors.white,
+          fontSize: FontSizes.md,
+        },
+        toggleButton: {
+          marginTop: Spacing.lg,
+          alignItems: 'center',
+          minHeight: MIN_TOUCH_TARGET,
+          justifyContent: 'center',
+        },
+        toggleText: {
+          fontFamily: Fonts.medium,
+          color: colors.primary,
+          fontSize: FontSizes.sm,
+        },
+      }),
+    [colors]
+  );
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -103,51 +181,47 @@ export default function LoginScreen() {
           </Text>
 
           {isSignUp && (
-            <TextInput
-              style={styles.input}
-              placeholder="Business name"
-              placeholderTextColor={Colors.textMuted}
+            <Input
+              label="Business name"
               value={businessName}
               onChangeText={setBusinessName}
+              placeholder="Business name"
               autoCapitalize="words"
               autoComplete="name"
             />
           )}
 
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            placeholderTextColor={Colors.textMuted}
+          <Input
+            label="Email"
             value={email}
             onChangeText={setEmail}
+            placeholder="Email"
             autoCapitalize="none"
             keyboardType="email-address"
             autoComplete="email"
             textContentType="emailAddress"
           />
 
-          <View style={styles.passwordRow}>
-            <TextInput
-              style={[styles.input, styles.passwordInput]}
-              placeholder="Password"
-              placeholderTextColor={Colors.textMuted}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-              autoComplete={isSignUp ? 'password-new' : 'password'}
-              textContentType={isSignUp ? 'newPassword' : 'password'}
-            />
-            <TouchableOpacity
-              style={styles.showPasswordBtn}
-              onPress={() => setShowPassword((p) => !p)}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Text style={styles.showPasswordText}>
-                {showPassword ? 'Hide' : 'Show'}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <Input
+            label="Password"
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Password"
+            secureTextEntry={!showPassword}
+            autoCapitalize="none"
+            autoComplete={isSignUp ? 'password-new' : 'password'}
+            textContentType={isSignUp ? 'newPassword' : 'password'}
+            rightIcon={
+              <TouchableOpacity
+                onPress={() => setShowPassword((p) => !p)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Text style={styles.showPasswordText}>
+                  {showPassword ? 'Hide' : 'Show'}
+                </Text>
+              </TouchableOpacity>
+            }
+          />
 
           {!isSignUp && (
             <Link href="/forgot-password" asChild>
@@ -165,7 +239,7 @@ export default function LoginScreen() {
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color={Colors.white} />
+              <ActivityIndicator color={colors.white} />
             ) : (
               <Text style={styles.buttonText}>
                 {isSignUp ? 'Sign Up' : 'Sign In'}
@@ -186,120 +260,3 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: Spacing['2xl'],
-    paddingVertical: Spacing['4xl'],
-  },
-  formContainer: {
-    width: '100%',
-  },
-  title: {
-    fontFamily: Fonts.bold,
-    fontSize: FontSizes['4xl'],
-    textAlign: 'center',
-    marginBottom: Spacing.sm,
-    color: Colors.textPrimary,
-  },
-  titlePeriod: {
-    color: Colors.primary,
-  },
-  subtitle: {
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.md,
-    textAlign: 'center',
-    color: Colors.textSecondary,
-    marginBottom: Spacing['4xl'],
-  },
-  modeTitle: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes['2xl'],
-    marginBottom: Spacing['2xl'],
-    color: Colors.textPrimary,
-  },
-  input: {
-    fontFamily: Fonts.regular,
-    backgroundColor: Colors.card,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.lg,
-    borderRadius: BorderRadius.md,
-    fontSize: FontSizes.md,
-    marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    color: Colors.textPrimary,
-  },
-  passwordRow: {
-    position: 'relative',
-    marginBottom: Spacing.sm,
-  },
-  passwordInput: {
-    marginBottom: 0,
-    paddingRight: 70,
-  },
-  showPasswordBtn: {
-    position: 'absolute',
-    right: Spacing.md,
-    top: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    minHeight: MIN_TOUCH_TARGET,
-  },
-  showPasswordText: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes.sm,
-    color: Colors.primary,
-  },
-  forgotLink: {
-    alignSelf: 'flex-end',
-    marginBottom: Spacing.md,
-    minHeight: MIN_TOUCH_TARGET,
-    justifyContent: 'center',
-  },
-  forgotText: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes.sm,
-    color: Colors.primary,
-  },
-  errorText: {
-    fontFamily: Fonts.regular,
-    color: Colors.destructive,
-    fontSize: FontSizes.sm,
-    marginBottom: Spacing.md,
-    textAlign: 'center',
-  },
-  button: {
-    backgroundColor: Colors.primary,
-    paddingVertical: Spacing.lg,
-    borderRadius: BorderRadius.md,
-    alignItems: 'center',
-    marginTop: Spacing.sm,
-    minHeight: MIN_TOUCH_TARGET,
-    justifyContent: 'center',
-  },
-  buttonDisabled: {
-    backgroundColor: Colors.textMuted,
-  },
-  buttonText: {
-    fontFamily: Fonts.medium,
-    color: Colors.white,
-    fontSize: FontSizes.md,
-  },
-  toggleButton: {
-    marginTop: Spacing.lg,
-    alignItems: 'center',
-    minHeight: MIN_TOUCH_TARGET,
-    justifyContent: 'center',
-  },
-  toggleText: {
-    fontFamily: Fonts.medium,
-    color: Colors.primary,
-    fontSize: FontSizes.sm,
-  },
-});

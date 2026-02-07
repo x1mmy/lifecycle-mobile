@@ -2,7 +2,7 @@
  * Modal — confirmation dialog with overlay.
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Modal as RNModal,
   View,
@@ -13,7 +13,8 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Colors, Fonts, FontSizes, Spacing, BorderRadius } from '../../constants/theme';
+import { Fonts, FontSizes, Spacing, BorderRadius } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 import { Button } from './Button';
 
 interface ModalProps {
@@ -39,6 +40,55 @@ export function Modal({
   destructive = false,
   children,
 }: ModalProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        overlay: {
+          flex: 1,
+          backgroundColor: colors.overlay,
+          justifyContent: 'center',
+          padding: Spacing['2xl'],
+        },
+        content: {
+          backgroundColor: colors.card,
+          borderRadius: BorderRadius.lg,
+          padding: Spacing['2xl'],
+        },
+        title: {
+          fontFamily: Fonts.bold,
+          fontSize: FontSizes.lg,
+          color: colors.textPrimary,
+          marginBottom: Spacing.sm,
+        },
+        message: {
+          fontFamily: Fonts.regular,
+          fontSize: FontSizes.md,
+          color: colors.textSecondary,
+          marginBottom: Spacing.xl,
+        },
+        actions: {
+          flexDirection: 'row',
+          justifyContent: 'flex-end',
+          alignItems: 'center',
+          gap: Spacing.md,
+          marginTop: Spacing.md,
+        },
+        cancelWrap: {
+          paddingVertical: Spacing.md,
+          paddingHorizontal: Spacing.lg,
+          minHeight: 44,
+          justifyContent: 'center',
+        },
+        cancelText: {
+          fontFamily: Fonts.medium,
+          fontSize: FontSizes.md,
+          color: colors.primary,
+        },
+        confirmBtn: { minWidth: 100 },
+      }),
+    [colors]
+  );
   return (
     <RNModal
       visible={visible}
@@ -79,50 +129,3 @@ export function Modal({
     </RNModal>
   );
 }
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: Colors.overlay,
-    justifyContent: 'center',
-    padding: Spacing['2xl'],
-  },
-  content: {
-    backgroundColor: Colors.card,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing['2xl'],
-  },
-  title: {
-    fontFamily: Fonts.bold,
-    fontSize: FontSizes.lg,
-    color: Colors.textPrimary,
-    marginBottom: Spacing.sm,
-  },
-  message: {
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.md,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.xl,
-  },
-  actions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    gap: Spacing.md,
-    marginTop: Spacing.md,
-  },
-  cancelWrap: {
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    minHeight: 44,
-    justifyContent: 'center',
-  },
-  cancelText: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes.md,
-    color: Colors.primary,
-  },
-  confirmBtn: {
-    minWidth: 100,
-  },
-});

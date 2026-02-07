@@ -2,7 +2,7 @@
  * Product list — SearchBar, filter, FlatList, swipe/long-press delete, FAB.
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,16 +13,19 @@ import {
   Alert,
 } from 'react-native';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useTheme } from '../../../contexts/ThemeContext';
 import { useProducts } from '../../../lib/hooks/useProducts';
 import { router } from 'expo-router';
 import { deleteProducts } from '../../../lib/services/products';
 import { useToast } from '../../../components/ui/Toast';
 import { SearchBar } from '../../../components/ui/SearchBar';
 import { FilterChips, ChipOption } from '../../../components/ui/FilterChips';
+import { AnimatedPressable } from '../../../components/ui/AnimatedPressable';
 import { ProductListItem } from '../../../components/products/ProductListItem';
 import { EmptyState } from '../../../components/ui/EmptyState';
+import { FadeInView } from '../../../components/ui/FadeInView';
 import { ProductListSkeleton } from '../../../components/ui/LoadingSkeleton';
-import { Colors, Fonts, FontSizes, Spacing } from '../../../constants/theme';
+import { Fonts, FontSizes, Spacing } from '../../../constants/theme';
 import { daysUntil } from '../../../constants/status';
 import type { ProductWithBatches } from '../../../lib/types/database';
 
@@ -38,18 +41,90 @@ function earliestExpiry(batches: ProductWithBatches['product_batches']): string 
 }
 
 export default function ProductsListScreen() {
+  const { colors } = useTheme();
   const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [sort, setSort] = useState<SortOption>('expiry');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectionMode, setSelectionMode] = useState(false);
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: colors.background },
+        toolbar: {
+          padding: Spacing.lg,
+          paddingBottom: Spacing.sm,
+          backgroundColor: colors.card,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        },
+        sortRow: { flexDirection: 'row', alignItems: 'center', marginTop: Spacing.sm },
+        sortLabel: {
+          fontFamily: Fonts.medium,
+          fontSize: FontSizes.sm,
+          color: colors.textSecondary,
+          marginRight: Spacing.sm,
+        },
+        sortChips: { flex: 1 },
+        bulkDelete: {
+          marginTop: Spacing.md,
+          padding: Spacing.md,
+          backgroundColor: colors.destructiveLight,
+          borderRadius: 8,
+          alignItems: 'center',
+        },
+        bulkDeleteText: { fontFamily: Fonts.medium, fontSize: FontSizes.sm, color: colors.destructive },
+        selectBtn: {
+          paddingVertical: Spacing.xs,
+          paddingHorizontal: Spacing.md,
+          borderRadius: 8,
+          borderWidth: 1,
+          borderColor: colors.border,
+        },
+        selectBtnActive: { backgroundColor: colors.primaryLight, borderColor: colors.primary },
+        selectBtnText: { fontFamily: Fonts.medium, fontSize: FontSizes.sm, color: colors.textSecondary },
+        selectBtnTextActive: { color: colors.primary },
+        cancelSelect: { marginTop: Spacing.sm, padding: Spacing.sm, alignItems: 'center' },
+        cancelSelectText: { fontFamily: Fonts.medium, fontSize: FontSizes.sm, color: colors.textMuted },
+        listWrap: { flex: 1 },
+        listContent: { padding: Spacing.lg, paddingBottom: 100 },
+        footer: { height: Spacing.lg },
+        fab: {
+          position: 'absolute',
+          right: Spacing.xl,
+          bottom: 32,
+          width: 56,
+          height: 56,
+          borderRadius: 28,
+          backgroundColor: colors.primary,
+          alignItems: 'center',
+          justifyContent: 'center',
+          elevation: 4,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.2,
+          shadowRadius: 4,
+        },
+        fabText: { fontSize: 28, color: colors.white, fontFamily: Fonts.medium, lineHeight: 32 },
+      }),
+    [colors]
+  );
 
   const { data: products, loading, refetch } = useProducts(user?.id, {
     search: search || undefined,
     sort,
   });
+  const [refreshing, setRefreshing] = useState(false);
 
   const { success, error: showError } = useToast();
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  }, [refetch]);
 
   const filtered = React.useMemo(() => {
     if (statusFilter === 'all') return products;
@@ -129,6 +204,7 @@ export default function ProductsListScreen() {
             await deleteProducts(Array.from(selectedIds));
             success('Products deleted');
             setSelectedIds(new Set());
+            setSelectionMode(false);
             refetch();
           } catch (e) {
             showError(e instanceof Error ? e.message : 'Failed to delete');
@@ -147,13 +223,20 @@ export default function ProductsListScreen() {
     });
   };
 
+  const exitSelectionMode = () => {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  };
+
   const renderItem = ({ item }: { item: ProductWithBatches }) => (
     <ProductListItem
       product={item}
       onPress={() => {
-        if (selectedIds.size > 0) toggleSelect(item.id);
+        if (selectionMode) toggleSelect(item.id);
         else router.push(`/(tabs)/products/${item.id}`);
       }}
+      selectionMode={selectionMode}
+      selected={selectedIds.has(item.id)}
     />
   );
 
@@ -169,10 +252,23 @@ export default function ProductsListScreen() {
           <View style={styles.sortChips}>
             <FilterChips options={sortOptions} selected={sort} onSelect={(v) => setSort(v as SortOption)} />
           </View>
+          <TouchableOpacity
+            style={[styles.selectBtn, selectionMode && styles.selectBtnActive]}
+            onPress={() => setSelectionMode((prev) => !prev)}
+          >
+            <Text style={[styles.selectBtnText, selectionMode && styles.selectBtnTextActive]}>
+              {selectionMode ? 'Cancel' : 'Select'}
+            </Text>
+          </TouchableOpacity>
         </View>
-        {selectedIds.size > 0 && (
+        {selectionMode && selectedIds.size > 0 && (
           <TouchableOpacity style={styles.bulkDelete} onPress={handleBulkDelete}>
             <Text style={styles.bulkDeleteText}>Delete selected ({selectedIds.size})</Text>
+          </TouchableOpacity>
+        )}
+        {selectionMode && selectedIds.size === 0 && (
+          <TouchableOpacity style={styles.cancelSelect} onPress={exitSelectionMode}>
+            <Text style={styles.cancelSelectText}>Cancel selection</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -188,92 +284,33 @@ export default function ProductsListScreen() {
           onAction={products.length === 0 ? () => router.push('/(tabs)/products/add') : undefined}
         />
       ) : (
-        <FlatList
-          data={filtered}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
-          refreshControl={<RefreshControl refreshing={loading} onRefresh={refetch} />}
-          ListFooterComponent={<View style={styles.footer} />}
-        />
+        <FadeInView key={`${statusFilter}-${sort}`} delay={0} duration={280} style={styles.listWrap}>
+          <FlatList
+            data={filtered}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            contentContainerStyle={styles.listContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={colors.primary}
+                colors={[colors.primary]}
+              />
+            }
+            ListFooterComponent={<View style={styles.footer} />}
+          />
+        </FadeInView>
       )}
 
-      <TouchableOpacity
+      <AnimatedPressable
         style={styles.fab}
         onPress={() => router.push('/(tabs)/products/add')}
-        activeOpacity={0.9}
+        haptic
       >
         <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
+      </AnimatedPressable>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  toolbar: {
-    padding: Spacing.lg,
-    paddingBottom: Spacing.sm,
-    backgroundColor: Colors.card,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  sortRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: Spacing.sm,
-  },
-  sortLabel: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes.sm,
-    color: Colors.textSecondary,
-    marginRight: Spacing.sm,
-  },
-  sortChips: {
-    flex: 1,
-  },
-  bulkDelete: {
-    marginTop: Spacing.md,
-    padding: Spacing.md,
-    backgroundColor: Colors.destructiveLight,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  bulkDeleteText: {
-    fontFamily: Fonts.medium,
-    fontSize: FontSizes.sm,
-    color: Colors.destructive,
-  },
-  listContent: {
-    padding: Spacing.lg,
-    paddingBottom: 100,
-  },
-  footer: {
-    height: Spacing.lg,
-  },
-  fab: {
-    position: 'absolute',
-    right: Spacing.xl,
-    bottom: 32,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: Colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  fabText: {
-    fontSize: 28,
-    color: Colors.white,
-    fontFamily: Fonts.medium,
-    lineHeight: 32,
-  },
-});

@@ -2,26 +2,91 @@
  * Forgot Password — send reset link via email.
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { router, Link } from 'expo-router';
 import { supabase } from '../lib/supabase';
-import { Colors, Fonts, FontSizes, Spacing, BorderRadius, MIN_TOUCH_TARGET } from '../constants/theme';
+import { Input } from '../components/ui/Input';
+import { useTheme } from '../contexts/ThemeContext';
+import { Fonts, FontSizes, Spacing, BorderRadius, MIN_TOUCH_TARGET } from '../constants/theme';
 
 export default function ForgotPasswordScreen() {
+  const { colors } = useTheme();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: colors.background },
+        scrollContent: { flexGrow: 1, justifyContent: 'center', paddingVertical: Spacing['4xl'] },
+        formContainer: { paddingHorizontal: Spacing['2xl'] },
+        successIconWrap: { alignItems: 'center', marginBottom: Spacing.lg },
+        title: {
+          fontFamily: Fonts.bold,
+          fontSize: FontSizes['2xl'],
+          color: colors.textPrimary,
+          marginBottom: Spacing.sm,
+        },
+        subtitle: {
+          fontFamily: Fonts.regular,
+          fontSize: FontSizes.md,
+          color: colors.textSecondary,
+          marginBottom: Spacing['2xl'],
+        },
+        errorText: {
+          fontFamily: Fonts.regular,
+          color: colors.destructive,
+          fontSize: FontSizes.sm,
+          marginBottom: Spacing.md,
+        },
+        button: {
+          backgroundColor: colors.primary,
+          paddingVertical: Spacing.lg,
+          borderRadius: BorderRadius.md,
+          alignItems: 'center',
+          minHeight: MIN_TOUCH_TARGET,
+          justifyContent: 'center',
+        },
+        buttonDisabled: { backgroundColor: colors.textMuted },
+        buttonText: {
+          fontFamily: Fonts.medium,
+          color: colors.white,
+          fontSize: FontSizes.md,
+        },
+        backLink: {
+          marginTop: Spacing.lg,
+          alignItems: 'center',
+          minHeight: MIN_TOUCH_TARGET,
+          justifyContent: 'center',
+        },
+        backText: { fontFamily: Fonts.medium, color: colors.primary, fontSize: FontSizes.sm },
+        successTitle: {
+          fontFamily: Fonts.bold,
+          fontSize: FontSizes.xl,
+          color: colors.textPrimary,
+          marginBottom: Spacing.md,
+        },
+        successText: {
+          fontFamily: Fonts.regular,
+          fontSize: FontSizes.md,
+          color: colors.textSecondary,
+          marginBottom: Spacing['2xl'],
+        },
+      }),
+    [colors]
+  );
 
   const handleSendReset = async () => {
     setError('');
@@ -49,19 +114,31 @@ export default function ForgotPasswordScreen() {
 
   if (sent) {
     return (
-      <View style={styles.container}>
-        <View style={styles.formContainer}>
-          <Text style={styles.successTitle}>Check your email</Text>
-          <Text style={styles.successText}>
-            We sent a password reset link to {email}. Use it to set a new password.
-          </Text>
-          <Link href="/login" asChild>
-            <TouchableOpacity style={styles.button}>
-              <Text style={styles.buttonText}>Back to Sign In</Text>
-            </TouchableOpacity>
-          </Link>
-        </View>
-      </View>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.formContainer}>
+            <View style={styles.successIconWrap}>
+              <Ionicons name="mail-open" size={64} color={colors.primary} />
+            </View>
+            <Text style={styles.successTitle}>Check your email</Text>
+            <Text style={styles.successText}>
+              We sent a password reset link to {email}. Use it to set a new password.
+            </Text>
+            <Link href="/login" asChild>
+              <TouchableOpacity style={styles.button}>
+                <Text style={styles.buttonText}>Back to Sign In</Text>
+              </TouchableOpacity>
+            </Link>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     );
   }
 
@@ -70,123 +147,49 @@ export default function ForgotPasswordScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <View style={styles.formContainer}>
-        <Text style={styles.title}>Reset password</Text>
-        <Text style={styles.subtitle}>
-          Enter your email and we'll send you a link to reset your password.
-        </Text>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.formContainer}>
+          <Text style={styles.title}>Reset password</Text>
+          <Text style={styles.subtitle}>
+            Enter your email and we'll send you a link to reset your password.
+          </Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor={Colors.textMuted}
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          autoComplete="email"
-        />
+          <Input
+            label="Email"
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Email"
+            autoCapitalize="none"
+            keyboardType="email-address"
+            autoComplete="email"
+          />
 
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleSendReset}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color={Colors.white} />
-          ) : (
-            <Text style={styles.buttonText}>Send Reset Link</Text>
-          )}
-        </TouchableOpacity>
-
-        <Link href="/login" asChild>
-          <TouchableOpacity style={styles.backLink}>
-            <Text style={styles.backText}>Back to Sign In</Text>
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={handleSendReset}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color={colors.white} />
+            ) : (
+              <Text style={styles.buttonText}>Send Reset Link</Text>
+            )}
           </TouchableOpacity>
-        </Link>
-      </View>
+
+          <Link href="/login" asChild>
+            <TouchableOpacity style={styles.backLink}>
+              <Text style={styles.backText}>Back to Sign In</Text>
+            </TouchableOpacity>
+          </Link>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-    justifyContent: 'center',
-  },
-  formContainer: {
-    paddingHorizontal: Spacing['2xl'],
-  },
-  title: {
-    fontFamily: Fonts.bold,
-    fontSize: FontSizes['2xl'],
-    color: Colors.textPrimary,
-    marginBottom: Spacing.sm,
-  },
-  subtitle: {
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.md,
-    color: Colors.textSecondary,
-    marginBottom: Spacing['2xl'],
-  },
-  input: {
-    fontFamily: Fonts.regular,
-    backgroundColor: Colors.card,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.lg,
-    borderRadius: BorderRadius.md,
-    fontSize: FontSizes.md,
-    marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    color: Colors.textPrimary,
-  },
-  errorText: {
-    fontFamily: Fonts.regular,
-    color: Colors.destructive,
-    fontSize: FontSizes.sm,
-    marginBottom: Spacing.md,
-  },
-  button: {
-    backgroundColor: Colors.primary,
-    paddingVertical: Spacing.lg,
-    borderRadius: BorderRadius.md,
-    alignItems: 'center',
-    minHeight: MIN_TOUCH_TARGET,
-    justifyContent: 'center',
-  },
-  buttonDisabled: {
-    backgroundColor: Colors.textMuted,
-  },
-  buttonText: {
-    fontFamily: Fonts.medium,
-    color: Colors.white,
-    fontSize: FontSizes.md,
-  },
-  backLink: {
-    marginTop: Spacing.lg,
-    alignItems: 'center',
-    minHeight: MIN_TOUCH_TARGET,
-    justifyContent: 'center',
-  },
-  backText: {
-    fontFamily: Fonts.medium,
-    color: Colors.primary,
-    fontSize: FontSizes.sm,
-  },
-  successTitle: {
-    fontFamily: Fonts.bold,
-    fontSize: FontSizes.xl,
-    color: Colors.textPrimary,
-    marginBottom: Spacing.md,
-  },
-  successText: {
-    fontFamily: Fonts.regular,
-    fontSize: FontSizes.md,
-    color: Colors.textSecondary,
-    marginBottom: Spacing['2xl'],
-  },
-});
