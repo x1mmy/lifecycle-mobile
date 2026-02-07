@@ -1,0 +1,54 @@
+LIFECYCLE MOBILE APP - FILE INDEX
+==================================
+
+📚 DOCUMENTATION (Read these first!)
+====================================
+1. QUICK_START.md           - Start here! Your first steps
+2. SETUP_GUIDE.md            - Detailed environment setup
+3. DEVELOPMENT_ROADMAP.md    - Feature roadmap & development phases
+4. COMMAND_REFERENCE.md      - Common commands cheatsheet
+5. README.md                 - Project overview
+
+⚙️ CONFIGURATION FILES
+=======================
+6. package.json              - Dependencies and npm scripts
+7. app.json                  - Expo app configuration
+8. tsconfig.json             - TypeScript configuration
+9. .env.example              - Environment variables template
+10. .gitignore               - Git ignore rules
+
+📱 APPLICATION CODE
+===================
+App Screens (app/)
+------------------
+11. app/_layout.tsx          - Root layout with navigation
+12. app/index.tsx            - Home screen
+13. app/login.tsx            - Login/signup screen
+
+State Management (contexts/)
+----------------------------
+14. contexts/AuthContext.tsx - Authentication state
+
+Backend Integration (lib/)
+--------------------------
+15. lib/supabase.ts          - Supabase client configuration
+
+RECOMMENDED READING ORDER
+=========================
+1. Start with: QUICK_START.md
+2. Then read: SETUP_GUIDE.md
+3. Skim through: README.md
+4. Keep handy: COMMAND_REFERENCE.md
+5. Review code: All .tsx/.ts files (they're heavily commented!)
+6. Plan your work: DEVELOPMENT_ROADMAP.md
+
+NEXT STEPS
+==========
+1. Follow SETUP_GUIDE.md to install tools
+2. Copy files to your project directory
+3. Run: npm install
+4. Create .env file (copy from .env.example)
+5. Run: npm start
+6. Test on your phone with Expo Go!
+
+All code is heavily commented to help you learn React Native as you build!

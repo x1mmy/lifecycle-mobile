@@ -1,0 +1,79 @@
+{
+  "expo": {
+    "name": "LifeCycle",
+    "slug": "lifecycle-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.stashlabs.lifecycle",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app uses the camera to scan product barcodes for quick inventory entry.",
+        "NSPhotoLibraryUsageDescription": "This app allows you to save product photos to your library.",
+        "NSMicrophoneUsageDescription": "Not used by this app."
+      }
+    },
+    "android": {
+      "package": "com.stashlabs.lifecycle",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "NOTIFICATIONS"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow LifeCycle to access your camera to scan product barcodes."
+        }
+      ],
+      [
+        "expo-barcode-scanner",
+        {
+          "cameraPermission": "Allow LifeCycle to access your camera to scan product barcodes."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#ffffff",
+          "sounds": [
+            "./assets/notification.wav"
+          ]
+        }
+      ]
+    ],
+    "scheme": "lifecycle",
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "feff4f03-14de-4145-be67-68f63828ba45"
+      }
+    },
+    "owner": "stashlabs"
+  }
+}
