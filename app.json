@@ -9,7 +9,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#10B981"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -49,12 +49,6 @@
         }
       ],
       [
-        "expo-barcode-scanner",
-        {
-          "cameraPermission": "Allow LifeCycle to access your camera to scan product barcodes."
-        }
-      ],
-      [
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
@@ -63,7 +57,9 @@
             "./assets/notification.wav"
           ]
         }
-      ]
+      ],
+      "expo-font",
+      "@react-native-community/datetimepicker"
     ],
     "scheme": "lifecycle",
     "extra": {

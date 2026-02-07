@@ -36,8 +36,8 @@ interface AuthContextType {
   // Function to sign in with email/password
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   
-  // Function to sign up a new user
-  signUp: (email: string, password: string) => Promise<{ error: any }>;
+  // Function to sign up a new user (businessName for profile)
+  signUp: (email: string, password: string, businessName?: string) => Promise<{ error: any }>;
   
   // Function to sign out the current user
   signOut: () => Promise<void>;
@@ -54,7 +54,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   signIn: async () => ({ error: null }),
-  signUp: async () => ({ error: null }),
+  signUp: async (_email, _password, _businessName?) => ({ error: null }),
   signOut: async () => {},
 });
 
@@ -150,18 +150,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * Sign Up Function
-   * 
-   * Creates a new user account with email and password.
-   * Note: By default, Supabase sends a confirmation email.
-   * You can disable this in Supabase dashboard if you want instant signups.
+   * Creates a new user account and inserts profile (business_name and email NOT NULL in DB).
    */
-  const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
+  const signUp = async (email: string, password: string, businessName?: string) => {
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
     });
-    
-    return { error };
+
+    if (error) return { error };
+
+    if (data.user) {
+      await supabase.from('profiles').upsert({
+        id: data.user.id,
+        business_name: (businessName?.trim() || 'Business').slice(0, 255),
+        email: data.user.email ?? email,
+      });
+    }
+
+    return { error: null };
   };
 
   /**
