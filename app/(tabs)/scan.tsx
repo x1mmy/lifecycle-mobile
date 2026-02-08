@@ -109,7 +109,11 @@ export default function ScanScreen() {
   }, [result]);
 
   const close = useCallback(() => {
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)');
+    }
   }, []);
 
   const styles = useMemo(

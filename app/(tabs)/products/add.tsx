@@ -345,7 +345,11 @@ export default function AddProductScreen() {
           return;
         }
       }
-      router.back();
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace('/(tabs)/products');
+      }
     } catch (e) {
       showError(e instanceof Error ? e.message : 'Failed to save');
     } finally {

@@ -184,7 +184,11 @@ export default function ProductDetailScreen() {
       await deleteProduct(id);
       success('Product deleted');
       setDeleteModalVisible(false);
-      router.back();
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace('/(tabs)/products');
+      }
     } catch (e) {
       showError(e instanceof Error ? e.message : 'Failed to delete');
     }
