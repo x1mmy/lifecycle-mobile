@@ -66,6 +66,16 @@ export interface BarcodeCache {
   updated_at?: string;
 }
 
+export interface Feedback {
+  id: string;
+  user_id: string | null;
+  email: string | null;
+  type: string | null;
+  message: string;
+  upvotes_count: number;
+  created_at: string;
+}
+
 export type ProductInsert = Omit<Product, 'id'> & { id?: string };
 export type ProductBatchInsert = Omit<ProductBatch, 'id' | 'created_at' | 'updated_at'> & {
   id?: string;

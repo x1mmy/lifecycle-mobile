@@ -22,6 +22,7 @@ export default function SettingsLayout() {
       <Stack.Screen name="profile" options={{ title: 'Business Profile' }} />
       <Stack.Screen name="notifications" options={{ title: 'Notifications' }} />
       <Stack.Screen name="categories" options={{ title: 'Categories' }} />
+      <Stack.Screen name="feedback" options={{ title: 'Feedback' }} />
     </Stack>
   );
 }

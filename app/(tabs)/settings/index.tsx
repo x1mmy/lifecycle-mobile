@@ -119,6 +119,16 @@ export default function SettingsIndexScreen() {
           </View>
           <Text style={styles.chevron}>›</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.row}
+          onPress={() => router.push('/(tabs)/settings/feedback')}
+        >
+          <View style={styles.rowLeft}>
+            <Ionicons name="chatbubble-ellipses-outline" size={22} color={colors.textSecondary} style={styles.rowIcon} />
+            <Text style={styles.label}>Feedback</Text>
+          </View>
+          <Text style={styles.chevron}>›</Text>
+        </TouchableOpacity>
       </View>
 
       <TouchableOpacity style={styles.signOut} onPress={handleSignOut}>

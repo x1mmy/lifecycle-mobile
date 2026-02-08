@@ -38,37 +38,44 @@ export default function TabsLayout() {
   const tabBarActiveTint = isDark ? colors.primary : '#FFFFFF';
   const tabBarInactiveTint = isDark ? colors.textMuted : 'rgba(255,255,255,0.5)';
   return (
-    <Tabs
-      screenOptions={{
-        headerStyle: { backgroundColor: colors.background },
-        headerTintColor: colors.textPrimary,
-        headerTitleStyle: { fontFamily: Fonts.medium },
-        tabBarActiveTintColor: tabBarActiveTint,
-        tabBarInactiveTintColor: tabBarInactiveTint,
-        tabBarLabelStyle: {
-          fontFamily: Fonts.medium,
-          fontSize: 10,
-          marginTop: 4,
-        },
-        tabBarIconStyle: {
-          marginTop: 6,
-        },
-        tabBarStyle: {
-          height: TAB_BAR_HEIGHT,
-          paddingTop: 8,
-          paddingBottom: BOTTOM_PAD,
-          backgroundColor: tabBarBg,
-          borderTopWidth: 0,
-          borderTopLeftRadius: TAB_BAR_RADIUS,
-          borderTopRightRadius: TAB_BAR_RADIUS,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.2,
-          shadowRadius: 12,
-          elevation: 12,
-        },
-        tabBarShowLabel: true,
-      }}
+    <View style={[styles.tabRoot, { backgroundColor: tabBarBg }]}>
+      <Tabs
+        screenOptions={{
+          sceneContainerStyle: { backgroundColor: colors.background },
+          headerStyle: { backgroundColor: colors.background },
+          headerTintColor: colors.textPrimary,
+          headerTitleStyle: { fontFamily: Fonts.medium },
+          tabBarActiveTintColor: tabBarActiveTint,
+          tabBarInactiveTintColor: tabBarInactiveTint,
+          tabBarLabelStyle: {
+            fontFamily: Fonts.medium,
+            fontSize: 10,
+            marginTop: 4,
+          },
+          tabBarIconStyle: {
+            marginTop: 6,
+          },
+          tabBarStyle: {
+            height: TAB_BAR_HEIGHT,
+            paddingTop: 8,
+            paddingBottom: BOTTOM_PAD,
+            backgroundColor: tabBarBg,
+            borderTopWidth: 0,
+            borderTopLeftRadius: TAB_BAR_RADIUS,
+            borderTopRightRadius: TAB_BAR_RADIUS,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: -4 },
+            shadowOpacity: 0.2,
+            shadowRadius: 12,
+            elevation: 12,
+            overflow: 'hidden',
+          },
+          // Fill area behind tab bar so rounded corners don't show white in dark mode
+          tabBarBackground: () => (
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: tabBarBg }]} />
+          ),
+          tabBarShowLabel: true,
+        }}
     >
       <Tabs.Screen
         name="index"
@@ -159,10 +166,14 @@ export default function TabsLayout() {
         }}
       />
     </Tabs>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  tabRoot: {
+    flex: 1,
+  },
   scanPill: {
     width: SCAN_PILL_SIZE,
     height: SCAN_PILL_SIZE,
