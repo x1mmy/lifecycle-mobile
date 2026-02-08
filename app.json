@@ -28,7 +28,7 @@
       "package": "com.stashlabs.lifecycle",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#10B981"
       },
       "permissions": [
         "CAMERA",
