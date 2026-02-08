@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "LifeCycle",
-    "slug": "lifecycle-mobile",
+    "slug": "lifecycle",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -20,7 +20,8 @@
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera to scan product barcodes for quick inventory entry.",
         "NSPhotoLibraryUsageDescription": "This app allows you to save product photos to your library.",
-        "NSMicrophoneUsageDescription": "Not used by this app."
+        "NSMicrophoneUsageDescription": "Not used by this app.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -33,7 +34,9 @@
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
-        "NOTIFICATIONS"
+        "NOTIFICATIONS",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
