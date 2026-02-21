@@ -20,6 +20,7 @@ npx expo start --tunnel
 - ✅ Works across different networks
 - ⚠️ Takes 30-60 seconds to establish tunnel
 - 📱 Scan QR code with Expo Go app
+- in Terminal -->  arrow up --> proceed annoymous 
 
 #### Start Development Server (LAN Mode - Faster)
 ```bash
