@@ -74,3 +74,25 @@ async function cacheResult(barcode: string, result: BarcodeResult): Promise<void
     // ignore cache write failure
   }
 }
+
+/**
+ * Sync product data to barcode_cache when a product is created/updated with a barcode.
+ * This ensures manually added products contribute to the community database.
+ */
+export async function syncProductToBarcodeCache(
+  barcode: string | null,
+  product: { name: string; supplier?: string | null; category?: string | null }
+): Promise<void> {
+  if (!barcode?.trim()) return;
+  
+  try {
+    await supabase.from('barcode_cache').upsert({
+      barcode: barcode.trim(),
+      name: product.name.trim() || CACHE_NAME_EMPTY,
+      supplier: product.supplier?.trim() || null,
+      category: product.category?.trim() || null,
+    });
+  } catch {
+    // ignore cache write failure
+  }
+}
