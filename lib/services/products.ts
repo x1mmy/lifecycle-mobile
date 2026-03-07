@@ -3,6 +3,7 @@
  */
 
 import { supabase } from '../supabase';
+import { syncProductToBarcodeCache } from './barcode';
 import type {
   Product,
   ProductWithBatches,
@@ -99,12 +100,41 @@ export async function createProduct(
     if (batchError) throw batchError;
   }
 
+  // Sync to barcode_cache if barcode is present
+  if (product.barcode) {
+    await syncProductToBarcodeCache(product.barcode, {
+      name: product.name,
+      supplier: product.supplier,
+      category: product.category,
+    });
+  }
+
   return productData as Product;
 }
 
 export async function updateProduct(id: string, updates: Partial<ProductInsert>): Promise<void> {
   const { error } = await supabase.from('products').update(updates).eq('id', id);
   if (error) throw error;
+
+  // Sync to barcode_cache if:
+  // 1. Barcode is being added/updated, OR
+  // 2. Product already has a barcode and name/supplier/category are being updated
+  const barcodeToSync = updates.barcode || (updates.name || updates.supplier !== undefined || updates.category !== undefined);
+  
+  if (barcodeToSync) {
+    // Fetch current product data to get all fields (including existing barcode if not in updates)
+    const currentProduct = await getProduct(id);
+    if (currentProduct) {
+      const barcode = updates.barcode ?? currentProduct.barcode;
+      if (barcode) {
+        await syncProductToBarcodeCache(barcode, {
+          name: updates.name ?? currentProduct.name,
+          supplier: updates.supplier !== undefined ? updates.supplier : currentProduct.supplier,
+          category: updates.category ?? currentProduct.category,
+        });
+      }
+    }
+  }
 }
 
 export async function deleteProduct(id: string): Promise<void> {
